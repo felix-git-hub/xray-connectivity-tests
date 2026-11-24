@@ -47,7 +47,10 @@ with tempfile.TemporaryDirectory() as folder, HTTPServer(("127.0.0.1", 18080), P
     tag = peer["settings"]["reverse"]["tag"]
     config["outbounds"] = [
         {"tag": "deny", "protocol": "blackhole"},
-        {"tag": "proof", "protocol": "freedom", "settings": {"redirect": "127.0.0.1:18080"}},
+        {"tag": "proof", "protocol": "freedom", "settings": {
+            "redirect": "127.0.0.1:18080",
+            "finalRules": [{"action": "allow", "network": "tcp", "ip": ["127.0.0.1/32"], "port": "18080"}],
+        }},
         peer,
     ]
     config["routing"] = {"rules": [
