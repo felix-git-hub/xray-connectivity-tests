@@ -4,38 +4,23 @@ on:
   push:
     paths:
       - .github/workflows/6h.yml
-      - .github/workflows/loopback_test.py
+      - .github/workflows/wrt_probe.py
 permissions:
   contents: read
 jobs:
   probe:
     name: git1 (6h)
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Exercise reverse Xray over SOCKS in an isolated namespace
+      - name: Verify reverse round trip from wrt1k
+        env:
+          PROFILE_PARAMS: ${{ secrets.WRT1K_6H_PARAMS }}
         run: |
           cd "$RUNNER_TEMP"
           curl -fsSL --retry 2 --max-time 60 https://github.com/XTLS/Xray-core/releases/download/v26.11.9/Xray-linux-64.zip -o xray.zip
           echo 'b651f7e1d9966ee2c1b1ee1bf8b52c72771824d3065dce96bbc8bcc19ed95f82  xray.zip' | sha256sum -c -
           unzip -qo xray.zip xray
           cd "$GITHUB_WORKSPACE"
-          sudo unshare --net sh -ec 'ip link set lo up; exec python3 .github/workflows/loopback_test.py "$1" "$2"' sh "$RUNNER_TEMP/xray" 6h
-      - name: Probe configured public ingress
-        env:
-          HOST: ws2.datascientist.top
-          PORT: "8443"
-          TRANSPORT: tcp
-        run: |
-          python3 -u - <<'PY'
-          import os, signal, socket, ssl
-          signal.alarm(35)
-          host, port = os.environ['HOST'], int(os.environ['PORT'])
-          print('DNS:', sorted({r[4][0] for r in socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)}))
-          with socket.create_connection((host, port), timeout=10) as sock:
-              print('TCP connected:', sock.getpeername()[0])
-              if os.environ['TRANSPORT'] == 'tls':
-                  with ssl.create_default_context().wrap_socket(sock, server_hostname=host) as tls:
-                      print('Certificate verified:', tls.version())
-          PY
+          python3 .github/workflows/wrt_probe.py "$RUNNER_TEMP/xray" 6h
