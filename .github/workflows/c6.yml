@@ -1,0 +1,48 @@
+name: git-cf connectivity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/c6.yml
+permissions:
+  contents: read
+jobs:
+  probe:
+    name: git-cf (c6)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render template with disposable inputs
+        env:
+          PROFILE: c6
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess, uuid
+          root = pathlib.Path(os.environ['RUNNER_TEMP'])
+          inputs = json.loads(pathlib.Path('params.example.json').read_text())
+          for key in inputs:
+              inputs[key] = 443 if key.endswith('_PORT') else str(uuid.uuid4())
+          params = root / 'fixture.json'
+          out = root / 'rendered.json'
+          params.write_text(json.dumps(inputs))
+          subprocess.run(['python3', 'render.py', os.environ['PROFILE'], params, out], check=True)
+          assert json.loads(out.read_text())['outbounds'][-1]['protocol'] == 'vless'
+          PY
+      - name: Probe configured public ingress
+        env:
+          HOST: cfcdn.datascientist.top
+          PORT: "443"
+          TRANSPORT: tls
+        run: |
+          python3 -u - <<'PY'
+          import os, signal, socket, ssl
+          signal.alarm(35)
+          host, port = os.environ['HOST'], int(os.environ['PORT'])
+          print('DNS:', sorted({r[4][0] for r in socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)}))
+          with socket.create_connection((host, port), timeout=10) as sock:
+              print('TCP connected:', sock.getpeername()[0])
+              if os.environ['TRANSPORT'] == 'tls':
+                  with ssl.create_default_context().wrap_socket(sock, server_hostname=host) as tls:
+                      print('Certificate verified:', tls.version())
+          PY
