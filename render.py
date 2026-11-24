@@ -18,7 +18,7 @@ def replace(value):
         return [replace(item) for item in value]
     if isinstance(value, str) and value.startswith(("XRAY_", "C2_XRAY_", "C6_XRAY_")):
         entry = params.get(value)
-        if entry is None or entry == "":
+        if entry is None or (entry == "" and value != "XRAY_SHORT_ID"):
             raise SystemExit(f"缺少参数 {value}")
         if value.endswith("_PORT"):
             port = int(entry)
