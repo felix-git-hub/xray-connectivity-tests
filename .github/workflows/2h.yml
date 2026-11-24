@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - .github/workflows/2h.yml
+      - .github/workflows/loopback_test.py
 permissions:
   contents: read
 jobs:
@@ -13,22 +14,14 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
-      - name: Render template with disposable inputs
-        env:
-          PROFILE: 2h
+      - name: Exercise reverse Xray over SOCKS in an isolated namespace
         run: |
-          python3 - <<'PY'
-          import json, os, pathlib, subprocess, uuid
-          root = pathlib.Path(os.environ['RUNNER_TEMP'])
-          inputs = json.loads(pathlib.Path('params.example.json').read_text())
-          for key in inputs:
-              inputs[key] = 443 if key.endswith('_PORT') else str(uuid.uuid4())
-          params = root / 'fixture.json'
-          out = root / 'rendered.json'
-          params.write_text(json.dumps(inputs))
-          subprocess.run(['python3', 'render.py', os.environ['PROFILE'], params, out], check=True)
-          assert json.loads(out.read_text())['outbounds'][-1]['protocol'] == 'vless'
-          PY
+          cd "$RUNNER_TEMP"
+          curl -fsSL --retry 2 --max-time 60 https://github.com/XTLS/Xray-core/releases/download/v26.11.9/Xray-linux-64.zip -o xray.zip
+          echo 'b651f7e1d9966ee2c1b1ee1bf8b52c72771824d3065dce96bbc8bcc19ed95f82  xray.zip' | sha256sum -c -
+          unzip -qo xray.zip xray
+          cd "$GITHUB_WORKSPACE"
+          sudo unshare --net sh -ec 'ip link set lo up; exec python3 .github/workflows/loopback_test.py "$1" "$2"' sh "$RUNNER_TEMP/xray" 2h
       - name: Probe configured public ingress
         env:
           HOST: ws2.datascientist.top
