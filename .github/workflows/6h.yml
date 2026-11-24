@@ -1,5 +1,7 @@
 name: git1 connectivity
 on:
+  schedule:
+    - cron: '27 */2 * * *'
   workflow_dispatch:
   push:
     paths:
@@ -11,7 +13,7 @@ jobs:
   probe:
     name: git1 (6h)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - name: Verify reverse round trip from wrt1k
