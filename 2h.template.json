@@ -1,0 +1,63 @@
+{
+  "log": {
+    "access": "/dev/null",
+    "error": "/dev/null",
+    "loglevel": "info"
+  },
+  "inbounds": [],
+  "outbounds": [
+    {
+      "tag": "reverse-direct",
+      "protocol": "freedom",
+      "settings": {
+        "ipsBlocked": [],
+        "finalRules": [
+          {
+            "action": "allow",
+            "network": "tcp,udp"
+          }
+        ]
+      }
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block",
+      "settings": {}
+    },
+    {
+      "tag": "reverse",
+      "protocol": "vless",
+      "settings": {
+        "address": "XRAY_ADDR",
+        "port": "XRAY_PORT",
+        "id": "XRAY_ID2",
+        "flow": "xtls-rprx-vision",
+        "reverse": {
+          "tag": "reverse-in"
+        },
+        "encryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "serverName": "XRAY_SERVER_NAME",
+          "publicKey": "XRAY_PUBLIC_KEY",
+          "spiderX": "",
+          "shortId": "XRAY_SHORT_ID"
+        }
+      }
+    }
+  ],
+  "routing": {
+    "rules": [
+      {
+        "inboundTag": [
+          "reverse-in"
+        ],
+        "outboundTag": "reverse-direct"
+      }
+    ]
+  }
+}

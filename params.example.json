@@ -1,0 +1,21 @@
+{
+  "C2_XRAY_ADDR": "",
+  "C2_XRAY_ENCRYPTION": "",
+  "C2_XRAY_ID": "",
+  "C2_XRAY_MODE": "",
+  "C2_XRAY_PATH": "",
+  "C2_XRAY_PORT": "",
+  "C6_XRAY_ADDR": "",
+  "C6_XRAY_ENCRYPTION": "",
+  "C6_XRAY_ID": "",
+  "C6_XRAY_MODE": "",
+  "C6_XRAY_PATH": "",
+  "C6_XRAY_PORT": "",
+  "XRAY_ADDR": "",
+  "XRAY_ID1": "",
+  "XRAY_ID2": "",
+  "XRAY_PORT": "",
+  "XRAY_PUBLIC_KEY": "",
+  "XRAY_SERVER_NAME": "",
+  "XRAY_SHORT_ID": ""
+}
